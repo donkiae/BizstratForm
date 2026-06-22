@@ -376,6 +376,43 @@
     }
 
     .field-error .error-msg { display: block; }
+
+    /* Upload progress overlay */
+    .progress-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(13,27,94,0.7);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-overlay.active { display: flex; }
+    .progress-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 40px 48px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .progress-box h3 { font-size: 17px; color: #0d1b5e; margin-bottom: 8px; }
+    .progress-box p  { font-size: 13px; color: #777; margin-bottom: 20px; }
+    .progress-bar-wrap {
+      background: #e8ecf5;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #0d1b5e;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-pct { font-size: 13px; color: #0d1b5e; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -392,11 +429,7 @@
   </div>
 
   <div class="card">
-    <form id="appForm" action="https://formsubmit.co/donkiae@gmail.com" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="_subject" value="New Application — SIM Business Strategy WY26/27" />
-      <input type="hidden" name="_captcha" value="false" />
-      <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_next" value="https://donkiae.github.io/BizstratForm/thankyou.html" />
+    <form id="appForm">
 
       <!-- Personal Info -->
       <div class="section-title">Personal Information</div>
@@ -519,6 +552,17 @@
   <p class="footer-note">SIM Business Strategy Club &nbsp;·&nbsp; WY 2026/2027 &nbsp;·&nbsp; All information submitted is kept confidential.</p>
 </div>
 
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-box">
+    <h3>Submitting Application</h3>
+    <p id="progress-msg">Uploading CV, please wait...</p>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-pct" id="progress-pct">0%</div>
+  </div>
+</div>
+
 <script>
   document.getElementById('cv-upload').addEventListener('change', function () {
     const label = document.getElementById('file-name');
@@ -627,14 +671,33 @@
     r.addEventListener('change', () => setError('field-thursday', false));
   });
 
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW_PYTxp6BZq7qJuhA8i9WAufCYPkkx96dqHsDMVPODPuWGp2rw2TEVyYnSxDHS3bNHA/exec';
+  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwodvfqCQ9mwFdAihzyHigx57M3FWCRg9PB37tta8xU0fXNtCyr9FPfcRlPE2B00KHyXA/exec';
+  const THANKYOU_URL = 'https://donkiae.github.io/BizstratForm/thankyou.html';
+  const CHUNK_SIZE   = 7000;
+  const BATCH_SIZE   = 3;
 
-  document.getElementById('appForm').addEventListener('submit', function (e) {
+  function setProgress(pct, msg) {
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent  = pct + '%';
+    if (msg) document.getElementById('progress-msg').textContent = msg;
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload  = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('appForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
     const code = document.getElementById('country-code').value;
     const num  = document.getElementById('phone').value.trim();
 
     let valid = true;
-
     const checks = [
       { id: 'name',       fieldId: 'field-name',       test: v => v.trim() !== '' },
       { id: 'student_id', fieldId: 'field-student_id', test: v => v.trim() !== '' },
@@ -649,7 +712,7 @@
     ];
 
     checks.forEach(({ id, fieldId, test }) => {
-      const el = document.getElementById(id);
+      const el  = document.getElementById(id);
       const err = !test(el.value);
       setError(fieldId, err);
       if (err) valid = false;
@@ -662,33 +725,68 @@
     if (!cvInput.files.length) { setError('field-cv', true); valid = false; }
 
     if (!valid) {
-      e.preventDefault();
       document.querySelector('.field-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Fire text data to Apps Script (sheet) — keepalive so it completes after page navigation
-    const payload = {
-      'Full Name':                           document.getElementById('name').value.trim(),
-      'Student ID':                          document.getElementById('student_id').value.trim(),
-      'SIM Email':                           document.getElementById('email').value.trim(),
-      'Contact Number':                      code + ' ' + num,
-      'Telegram Handle':                     document.getElementById('telegram').value.trim(),
-      'Programme':                           document.getElementById('programme').value,
-      'Year and Course':                     document.getElementById('course').value.trim(),
-      'CCA and Leadership Experience':       document.getElementById('experience').value.trim(),
-      'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
-      'Value You Bring':                     document.getElementById('value').value.trim(),
-      'Thursday Night Trainings':            thursdayPicked.value,
-    };
+    // Show progress overlay
+    document.getElementById('progress-overlay').classList.add('active');
+    setProgress(5, 'Reading CV...');
 
-    fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload)), {
-      method: 'GET',
-      mode: 'no-cors',
-      keepalive: true
-    });
+    try {
+      const cvFile  = cvInput.files[0];
+      const base64  = await readFileAsBase64(cvFile);
 
-    // Let form submit naturally to Formsubmit (handles CV email)
+      // Build full JSON payload (text + CV)
+      const fullPayload = JSON.stringify({
+        'Full Name':                           document.getElementById('name').value.trim(),
+        'Student ID':                          document.getElementById('student_id').value.trim(),
+        'SIM Email':                           document.getElementById('email').value.trim(),
+        'Contact Number':                      code + ' ' + num,
+        'Telegram Handle':                     document.getElementById('telegram').value.trim(),
+        'Programme':                           document.getElementById('programme').value,
+        'Year and Course':                     document.getElementById('course').value.trim(),
+        'CCA and Leadership Experience':       document.getElementById('experience').value.trim(),
+        'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
+        'Value You Bring':                     document.getElementById('value').value.trim(),
+        'Thursday Night Trainings':            thursdayPicked.value,
+        cvBase64: base64,
+        cvName:   cvFile.name,
+        cvType:   cvFile.type,
+      });
+
+      const sid         = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const totalChunks = Math.ceil(fullPayload.length / CHUNK_SIZE);
+
+      setProgress(10, 'Uploading... 0%');
+
+      // Send chunks in small parallel batches
+      for (let batch = 0; batch < Math.ceil(totalChunks / BATCH_SIZE); batch++) {
+        const start = batch * BATCH_SIZE;
+        const end   = Math.min(start + BATCH_SIZE, totalChunks);
+
+        await Promise.all(
+          Array.from({ length: end - start }, (_, k) => {
+            const i      = start + k;
+            const chunk  = fullPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            const isLast = i === totalChunks - 1;
+            const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
+            return fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+          })
+        );
+
+        const pct = Math.round((end / totalChunks) * 85) + 10;
+        setProgress(pct, 'Uploading... ' + Math.round((end / totalChunks) * 100) + '%');
+      }
+
+      setProgress(100, 'Done!');
+      await new Promise(r => setTimeout(r, 600));
+      window.location.href = THANKYOU_URL;
+
+    } catch (err) {
+      document.getElementById('progress-overlay').classList.remove('active');
+      alert('Something went wrong. Please try again.');
+    }
   });
 </script>
 
