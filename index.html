@@ -377,42 +377,6 @@
 
     .field-error .error-msg { display: block; }
 
-    /* Upload progress overlay */
-    .progress-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(13,27,94,0.7);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-    }
-    .progress-overlay.active { display: flex; }
-    .progress-box {
-      background: #fff;
-      border-radius: 14px;
-      padding: 40px 48px;
-      text-align: center;
-      width: 320px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
-    .progress-box h3 { font-size: 17px; color: #0d1b5e; margin-bottom: 8px; }
-    .progress-box p  { font-size: 13px; color: #777; margin-bottom: 20px; }
-    .progress-bar-wrap {
-      background: #e8ecf5;
-      border-radius: 99px;
-      height: 8px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: #0d1b5e;
-      border-radius: 99px;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    .progress-pct { font-size: 13px; color: #0d1b5e; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -425,7 +389,7 @@
 
 <div class="container">
   <div class="notice">
-    Fill in all fields and attach your CV/resume below. Submission of this form does not guarantee an interview — only shortlisted applicants will be contacted via the email provided. All submissions are confidential.
+    Fill in all fields below. Submission of this form does not guarantee an interview — only shortlisted applicants will be contacted via the email provided. All submissions are confidential.
   </div>
 
   <div class="card">
@@ -531,20 +495,6 @@
         <div class="error-msg">Please select an option.</div>
       </div>
 
-      <!-- CV Upload -->
-
-      <div class="field" id="field-cv">
-        <label>Upload your CV <span class="req">*</span></label>
-        <div class="file-wrap">
-          <input type="file" name="CV" id="cv-upload" accept=".pdf,.doc,.docx" />
-          <div class="file-icon">📄</div>
-          <div class="file-label"><strong>Click to upload</strong> or drag and drop</div>
-          <div class="file-types">PDF, DOC, DOCX &nbsp;·&nbsp; Max 5 MB</div>
-        </div>
-        <div id="file-name"></div>
-        <div class="error-msg">Please upload your CV.</div>
-      </div>
-
       <button type="submit" class="submit-btn">Submit Application</button>
     </form>
   </div>
@@ -552,29 +502,7 @@
   <p class="footer-note">SIM Business Strategy Club &nbsp;·&nbsp; WY 2026/2027 &nbsp;·&nbsp; All information submitted is kept confidential.</p>
 </div>
 
-<div class="progress-overlay" id="progress-overlay">
-  <div class="progress-box">
-    <h3>Submitting Application</h3>
-    <p id="progress-msg">Uploading CV, please wait...</p>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="progress-fill"></div>
-    </div>
-    <div class="progress-pct" id="progress-pct">0%</div>
-  </div>
-</div>
-
 <script>
-  document.getElementById('cv-upload').addEventListener('change', function () {
-    const label = document.getElementById('file-name');
-    if (this.files.length > 0) {
-      label.textContent = '✓ ' + this.files[0].name;
-      label.style.display = 'block';
-    } else {
-      label.style.display = 'none';
-    }
-    setError('field-cv', false);
-  });
-
   function setError(fieldId, hasError) {
     const field = document.getElementById(fieldId);
     if (!field) return;
@@ -671,25 +599,8 @@
     r.addEventListener('change', () => setError('field-thursday', false));
   });
 
-  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwXdrb-rXnMhP8Xzw8yh3UIzbPZcNMFO6kvLz4VhGpSqT8Q8xw31b7AVJDR5zOIlR4GFg/exec';
+  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwBd4CZbtcL_Oh0mQTxexc21LY2IR4fJaED051d_VE5h0psnn1WIwEWKDWWQUF5RSivvw/exec';
   const THANKYOU_URL = 'https://donkiae.github.io/BizstratForm/thankyou.html';
-  const CHUNK_SIZE   = 3000;
-  const BATCH_SIZE   = 10;
-
-  function setProgress(pct, msg) {
-    document.getElementById('progress-fill').style.width = pct + '%';
-    document.getElementById('progress-pct').textContent  = pct + '%';
-    if (msg) document.getElementById('progress-msg').textContent = msg;
-  }
-
-  function readFileAsBase64(file) {
-    return new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload  = () => res(r.result.split(',')[1]);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
-  }
 
   document.getElementById('appForm').addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -721,26 +632,16 @@
     const thursdayPicked = document.querySelector('input[name="Able to Commit to Thursday Night Trainings"]:checked');
     if (!thursdayPicked) { setError('field-thursday', true); valid = false; }
 
-    const cvInput = document.getElementById('cv-upload');
-    if (!cvInput.files.length) { setError('field-cv', true); valid = false; }
-
     if (!valid) {
       document.querySelector('.field-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Show progress overlay
-    document.getElementById('progress-overlay').classList.add('active');
-    setProgress(5, 'Reading CV...');
+    const btn = document.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
 
     try {
-      const cvFile = cvInput.files[0];
-      const base64 = await readFileAsBase64(cvFile);
-
-      const sid = Date.now().toString(36) + Math.random().toString(36).slice(2);
-
-      // ── Phase 1: send text fields immediately (same approach as original) ──
-      setProgress(10, 'Saving your details...');
       const textData = {
         'Full Name':                           document.getElementById('name').value.trim(),
         'Student ID':                          document.getElementById('student_id').value.trim(),
@@ -754,37 +655,12 @@
         'Value You Bring':                     document.getElementById('value').value.trim(),
         'Thursday Night Trainings':            thursdayPicked.value,
       };
-      const p1 = new URLSearchParams({ payload: JSON.stringify(textData), sid });
-      await fetch(SCRIPT_URL + '?' + p1.toString(), { mode: 'no-cors' });
-      setProgress(25, 'Details saved. Uploading CV...');
-
-      // ── Phase 2: send CV as base64 chunks ──────────────────────────────────
-      const cvPayload   = JSON.stringify({ cvBase64: base64, cvName: cvFile.name, cvType: cvFile.type });
-      const totalChunks = Math.ceil(cvPayload.length / CHUNK_SIZE);
-
-      const sendCvChunk = (i, isLast) => {
-        const chunk  = cvPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
-        return fetch(SCRIPT_URL + '?' + params.toString(), { mode: 'no-cors' });
-      };
-
-      // Send all non-last chunks in parallel batches, then last chunk alone
-      const nonLast = totalChunks - 1;
-      for (let batch = 0; batch < Math.ceil(nonLast / BATCH_SIZE); batch++) {
-        const start = batch * BATCH_SIZE;
-        const end   = Math.min(start + BATCH_SIZE, nonLast);
-        await Promise.all(Array.from({ length: end - start }, (_, k) => sendCvChunk(start + k, false)));
-        setProgress(25 + Math.round((end / totalChunks) * 65), 'Uploading CV... ' + Math.round((end / totalChunks) * 100) + '%');
-      }
-      setProgress(93, 'Saving CV to Drive...');
-      await sendCvChunk(totalChunks - 1, true);
-
-      setProgress(100, 'Done!');
-      await new Promise(r => setTimeout(r, 600));
+      const params = new URLSearchParams({ payload: JSON.stringify(textData) });
+      await fetch(SCRIPT_URL + '?' + params.toString(), { mode: 'no-cors' });
       window.location.href = THANKYOU_URL;
-
     } catch (err) {
-      document.getElementById('progress-overlay').classList.remove('active');
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
       alert('Something went wrong. Please try again.\n\n' + err.message);
     }
   });
