@@ -21,6 +21,15 @@
       text-align: center;
     }
 
+    header img {
+      height: 72px;
+      width: auto;
+      margin-bottom: 16px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     header .club-label {
       font-size: 12px;
       letter-spacing: 2px;
@@ -258,6 +267,93 @@
 
     .radio-option input[type="radio"] { accent-color: #0d1b5e; }
 
+    .phone-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .phone-row input { flex: 1; }
+
+    .country-combo {
+      position: relative;
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .country-combo input[type="text"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .country-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 220px;
+      background: #fff;
+      border: 1.5px solid #d1d9e0;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+      list-style: none;
+      padding: 4px 0;
+    }
+
+    .country-list.open { display: block; }
+
+    .country-list li {
+      padding: 9px 14px;
+      font-size: 13.5px;
+      cursor: pointer;
+      color: #1a1a2e;
+    }
+
+    .country-list li:hover,
+    .country-list li.active {
+      background: #e8f0fe;
+      color: #0d1b5e;
+    }
+
+    .country-list li.no-results {
+      color: #aaa;
+      cursor: default;
+      font-style: italic;
+    }
+
+    .country-list li.no-results:hover { background: none; }
+
+    select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #d1d9e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #fafbfc;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #0d1b5e;
+      box-shadow: 0 0 0 3px rgba(13,27,94,0.1);
+      background-color: #fff;
+    }
+
+    .field-error select {
+      border-color: #e63946 !important;
+      box-shadow: 0 0 0 3px rgba(230,57,70,0.1) !important;
+    }
+
     .error-msg {
       color: #e63946;
       font-size: 12px;
@@ -285,7 +381,8 @@
 <body>
 
 <header>
-  <h1>Business Strategy Club</h1>
+  <img src="logo.png" alt="SIM Business Strategy Club" />
+  <h1>SIM Business Strategy Club</h1>
   <p>Application &nbsp;·&nbsp; Work Year 2026/2027</p>
 </header>
 
@@ -324,14 +421,22 @@
 
       <div class="two-col">
         <div class="field" id="field-email">
-          <label for="email">School Email <span class="req">*</span></label>
-          <input type="email" id="email" name="School Email" placeholder="yourname@mymailsimedu.onmicrosoft.com" />
+          <label for="email">SIM Email <span class="req">*</span></label>
+          <input type="email" id="email" name="SIM Email" placeholder="xxxxx@mymail.sim.edu.sg" />
           <div class="error-msg">Please enter a valid email address.</div>
         </div>
         <div class="field" id="field-phone">
-          <label for="phone">Phone Number <span class="req">*</span></label>
-          <input type="text" id="phone" name="Phone Number" placeholder="9XXX XXXX" />
-          <div class="error-msg">Please enter your phone number.</div>
+          <label for="phone">Contact Number <span class="req">*</span></label>
+          <div class="phone-row">
+            <div class="country-combo" id="country-combo">
+              <input type="text" id="country-search" autocomplete="off" />
+              <input type="hidden" id="country-code" value="+65" />
+              <ul class="country-list" id="country-list"></ul>
+            </div>
+            <input type="text" id="phone" />
+          </div>
+          <input type="hidden" id="contact-combined" name="Contact Number" />
+          <div class="error-msg">Please enter your contact number.</div>
         </div>
       </div>
 
@@ -339,6 +444,16 @@
         <label for="telegram">Telegram Handle <span class="req">*</span></label>
         <input type="text" id="telegram" name="Telegram Handle" placeholder="@username" />
         <div class="error-msg">Please enter your Telegram handle.</div>
+      </div>
+
+      <div class="field" id="field-programme">
+        <label for="programme">Programme <span class="req">*</span></label>
+        <select id="programme" name="Programme">
+          <option value="" disabled selected>Select your programme</option>
+          <option value="Diploma">Diploma</option>
+          <option value="Bachelor's">Bachelor's</option>
+        </select>
+        <div class="error-msg">Please select your programme.</div>
       </div>
 
       <div class="field" id="field-course">
@@ -362,8 +477,8 @@
       <!-- Motivation -->
 
       <div class="field" id="field-why">
-        <label for="why">Why do you want to join Business Strategy Club? <span class="req">*</span></label>
-        <textarea id="why" name="Why Join Business Strategy Club" placeholder="Share what draws you to this club specifically..."></textarea>
+        <label for="why">Why do you want to join SIM Business Strategy Club? <span class="req">*</span></label>
+        <textarea id="why" name="Why Join SIM Business Strategy Club" placeholder="Share what draws you to this club specifically..."></textarea>
         <div class="error-msg">Please answer this question.</div>
       </div>
 
@@ -374,7 +489,7 @@
       </div>
 
       <div class="field" id="field-thursday">
-        <label>Trainings are usually held on <strong>Thursday nights</strong>. Are you able to commit? <span class="req">*</span></label>
+        <label>Trainings are usually held on <strong>Thursday nights, 7–10pm</strong>. Are you able to commit? <span class="req">*</span></label>
         <div class="radio-group">
           <label class="radio-option">
             <input type="radio" name="Able to Commit to Thursday Night Trainings" value="Yes" />
@@ -436,7 +551,79 @@
   clearOnInput(document.getElementById('student_id'), 'field-student_id');
   clearOnInput(document.getElementById('email'), 'field-email');
   clearOnInput(document.getElementById('phone'), 'field-phone');
+  // Country code searchable combobox
+  const COUNTRIES = [
+    { label: '(+65) Singapore',  code: '+65'  },
+    { label: '(+60) Malaysia',   code: '+60'  },
+    { label: '(+86) China',      code: '+86'  },
+    { label: '(+91) India',      code: '+91'  },
+    { label: '(+62) Indonesia',  code: '+62'  },
+    { label: '(+95) Myanmar',    code: '+95'  },
+    { label: '(+84) Vietnam',    code: '+84'  },
+    { label: '(+82) South Korea',code: '+82'  },
+    { label: '(+852) Hong Kong', code: '+852' },
+    { label: '(+886) Taiwan',    code: '+886' },
+    { label: '(+66) Thailand',   code: '+66'  },
+    { label: '(+63) Philippines',code: '+63'  },
+    { label: '(+880) Bangladesh',code: '+880' },
+    { label: '(+94) Sri Lanka',  code: '+94'  },
+    { label: '(+977) Nepal',     code: '+977' },
+    { label: '(+92) Pakistan',   code: '+92'  },
+    { label: '(+81) Japan',      code: '+81'  },
+    { label: '(+44) UK',         code: '+44'  },
+    { label: '(+61) Australia',  code: '+61'  },
+    { label: '(+64) New Zealand',code: '+64'  },
+    { label: '(+1) USA/Canada',  code: '+1'   },
+  ];
+
+  const searchInput = document.getElementById('country-search');
+  const codeInput   = document.getElementById('country-code');
+  const listEl      = document.getElementById('country-list');
+
+  function renderList(filter) {
+    const q = filter.toLowerCase();
+    const matches = COUNTRIES.filter(c => c.label.toLowerCase().includes(q));
+    listEl.innerHTML = '';
+    if (matches.length === 0) {
+      listEl.innerHTML = '<li class="no-results">No results</li>';
+    } else {
+      matches.forEach(c => {
+        const li = document.createElement('li');
+        li.textContent = c.label;
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          codeInput.value = c.code;
+          searchInput.value = c.code;
+          listEl.classList.remove('open');
+          setError('field-phone', false);
+        });
+        listEl.appendChild(li);
+      });
+    }
+  }
+
+  searchInput.addEventListener('focus', () => {
+    searchInput.select();
+    renderList('');
+    listEl.classList.add('open');
+  });
+
+  searchInput.addEventListener('input', () => {
+    renderList(searchInput.value);
+    listEl.classList.add('open');
+  });
+
+  searchInput.addEventListener('blur', () => {
+    listEl.classList.remove('open');
+    if (!searchInput.value.trim()) {
+      searchInput.value = codeInput.value;
+    }
+  });
+
+  searchInput.value = '+65';
+  renderList('');
   clearOnInput(document.getElementById('telegram'), 'field-telegram');
+  clearOnInput(document.getElementById('programme'), 'field-programme');
   clearOnInput(document.getElementById('course'), 'field-course');
   clearOnInput(document.getElementById('experience'), 'field-experience');
   clearOnInput(document.getElementById('why'), 'field-why');
@@ -446,6 +633,10 @@
   });
 
   document.querySelector('form').addEventListener('submit', function (e) {
+    const code = document.getElementById('country-code').value;
+    const num = document.getElementById('phone').value.trim();
+    document.getElementById('contact-combined').value = num ? code + ' ' + num : '';
+
     let valid = true;
 
     const checks = [
@@ -454,6 +645,7 @@
       { id: 'email',      fieldId: 'field-email',      test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
       { id: 'phone',      fieldId: 'field-phone',      test: v => v.trim() !== '' },
       { id: 'telegram',   fieldId: 'field-telegram',   test: v => v.trim() !== '' },
+      { id: 'programme',  fieldId: 'field-programme',  test: v => v !== '' },
       { id: 'course',     fieldId: 'field-course',     test: v => v.trim() !== '' },
       { id: 'experience', fieldId: 'field-experience', test: v => v.trim() !== '' },
       { id: 'why',        fieldId: 'field-why',        test: v => v.trim() !== '' },
