@@ -673,8 +673,8 @@
 
   const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwodvfqCQ9mwFdAihzyHigx57M3FWCRg9PB37tta8xU0fXNtCyr9FPfcRlPE2B00KHyXA/exec';
   const THANKYOU_URL = 'https://donkiae.github.io/BizstratForm/thankyou.html';
-  const CHUNK_SIZE   = 7000;
-  const BATCH_SIZE   = 3;
+  const CHUNK_SIZE   = 3000;
+  const BATCH_SIZE   = 10;
 
   function setProgress(pct, msg) {
     document.getElementById('progress-fill').style.width = pct + '%';
@@ -760,24 +760,25 @@
 
       setProgress(10, 'Uploading... 0%');
 
-      // Send chunks in small parallel batches
-      for (let batch = 0; batch < Math.ceil(totalChunks / BATCH_SIZE); batch++) {
+      function sendChunk(i, isLast) {
+        const chunk  = fullPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
+        return fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+      }
+
+      // Send all chunks EXCEPT the last in parallel batches
+      const nonLast = totalChunks - 1;
+      for (let batch = 0; batch < Math.ceil(nonLast / BATCH_SIZE); batch++) {
         const start = batch * BATCH_SIZE;
-        const end   = Math.min(start + BATCH_SIZE, totalChunks);
-
-        await Promise.all(
-          Array.from({ length: end - start }, (_, k) => {
-            const i      = start + k;
-            const chunk  = fullPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-            const isLast = i === totalChunks - 1;
-            const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
-            return fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
-          })
-        );
-
-        const pct = Math.round((end / totalChunks) * 85) + 10;
+        const end   = Math.min(start + BATCH_SIZE, nonLast);
+        await Promise.all(Array.from({ length: end - start }, (_, k) => sendChunk(start + k, false)));
+        const pct = Math.round(((end) / totalChunks) * 80) + 10;
         setProgress(pct, 'Uploading... ' + Math.round((end / totalChunks) * 100) + '%');
       }
+
+      // Send the last chunk alone AFTER all others have been received
+      setProgress(93, 'Saving to Drive...');
+      await sendChunk(totalChunks - 1, true);
 
       setProgress(100, 'Done!');
       await new Promise(r => setTimeout(r, 600));
