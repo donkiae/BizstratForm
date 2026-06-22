@@ -760,11 +760,11 @@
 
       setProgress(10, 'Uploading... 0%');
 
-      function sendChunk(i, isLast) {
+      const sendChunk = (i, isLast) => {
         const chunk  = fullPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
         const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
         return fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
-      }
+      };
 
       // Send all chunks EXCEPT the last in parallel batches
       const nonLast = totalChunks - 1;
