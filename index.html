@@ -236,11 +236,28 @@
 
     .radio-option input[type="radio"] { accent-color: #0d1b5e; }
 
-    /* validation styles */
-    input:invalid:not(:placeholder-shown),
-    textarea:invalid:not(:placeholder-shown) {
+    .error-msg {
+      color: #e63946;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error input,
+    .field-error textarea {
+      border-color: #e63946 !important;
+      box-shadow: 0 0 0 3px rgba(230,57,70,0.1) !important;
+    }
+
+    .field-error .file-wrap {
+      border-color: #e63946 !important;
+    }
+
+    .field-error .radio-group .radio-option {
       border-color: #e63946;
     }
+
+    .field-error .error-msg { display: block; }
   </style>
 </head>
 <body>
@@ -271,65 +288,74 @@
       <div class="section-title">Personal Information</div>
 
       <div class="two-col">
-        <div class="field">
+        <div class="field" id="field-name">
           <label for="name">Full Name <span class="req">*</span></label>
-          <input type="text" id="name" name="Full Name" placeholder="As per student ID" required />
+          <input type="text" id="name" name="Full Name" placeholder="As per student ID" />
+          <div class="error-msg">Please enter your full name.</div>
         </div>
-        <div class="field">
+        <div class="field" id="field-student_id">
           <label for="student_id">Student ID <span class="req">*</span></label>
-          <input type="text" id="student_id" name="Student ID" placeholder="e.g. S1234567A" required />
+          <input type="text" id="student_id" name="Student ID" placeholder="e.g. S1234567A" />
+          <div class="error-msg">Please enter your student ID.</div>
         </div>
       </div>
 
       <div class="two-col">
-        <div class="field">
+        <div class="field" id="field-email">
           <label for="email">School Email <span class="req">*</span></label>
-          <input type="email" id="email" name="School Email" placeholder="yourname@mymailsimedu.onmicrosoft.com" required />
+          <input type="email" id="email" name="School Email" placeholder="yourname@mymailsimedu.onmicrosoft.com" />
+          <div class="error-msg">Please enter a valid email address.</div>
         </div>
-        <div class="field">
+        <div class="field" id="field-phone">
           <label for="phone">Phone Number <span class="req">*</span></label>
-          <input type="text" id="phone" name="Phone Number" placeholder="9XXX XXXX" required />
+          <input type="text" id="phone" name="Phone Number" placeholder="9XXX XXXX" />
+          <div class="error-msg">Please enter your phone number.</div>
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="field-telegram">
         <label for="telegram">Telegram Handle <span class="req">*</span></label>
-        <input type="text" id="telegram" name="Telegram Handle" placeholder="@username" required />
+        <input type="text" id="telegram" name="Telegram Handle" placeholder="@username" />
+        <div class="error-msg">Please enter your Telegram handle.</div>
       </div>
 
-      <div class="field">
+      <div class="field" id="field-course">
         <label for="course">Year &amp; Course <span class="req">*</span></label>
-        <input type="text" id="course" name="Year and Course" placeholder="e.g. Year 2, Business Management" required />
+        <input type="text" id="course" name="Year and Course" placeholder="e.g. Year 2, Business Management" />
+        <div class="error-msg">Please enter your year and course.</div>
       </div>
 
       <!-- Experience -->
       <div class="section-title">Experience &amp; Involvement</div>
 
-      <div class="field">
+      <div class="field" id="field-experience">
         <label for="experience">
           Prior CCA / Leadership Experience <span class="req">*</span>
           <span class="hint">List clubs, roles, or positions held</span>
         </label>
-        <textarea id="experience" name="CCA and Leadership Experience" placeholder="e.g. Logistics Head, SIM Marketing Society (WY24/25)..." required></textarea>
+        <textarea id="experience" name="CCA and Leadership Experience" placeholder="e.g. Logistics Head, SIM Marketing Society (WY24/25)..."></textarea>
+        <div class="error-msg">Please fill in your CCA or leadership experience.</div>
       </div>
 
       <!-- Motivation -->
 
-      <div class="field">
+      <div class="field" id="field-why">
         <label for="why">Why do you want to join Business Strategy Club? <span class="req">*</span></label>
-        <textarea id="why" name="Why Join Business Strategy Club" placeholder="Share what draws you to this club specifically..." required></textarea>
+        <textarea id="why" name="Why Join Business Strategy Club" placeholder="Share what draws you to this club specifically..."></textarea>
+        <div class="error-msg">Please answer this question.</div>
       </div>
 
-      <div class="field">
+      <div class="field" id="field-value">
         <label for="value">What value can you bring to the club? <span class="req">*</span></label>
-        <textarea id="value" name="Value You Bring" placeholder="Skills, ideas, or contributions you'd like to make..." required></textarea>
+        <textarea id="value" name="Value You Bring" placeholder="Skills, ideas, or contributions you'd like to make..."></textarea>
+        <div class="error-msg">Please answer this question.</div>
       </div>
 
-      <div class="field">
+      <div class="field" id="field-thursday">
         <label>Trainings are usually held on <strong>Thursday nights</strong>. Are you able to commit? <span class="req">*</span></label>
         <div class="radio-group">
           <label class="radio-option">
-            <input type="radio" name="Able to Commit to Thursday Night Trainings" value="Yes" required />
+            <input type="radio" name="Able to Commit to Thursday Night Trainings" value="Yes" />
             <span>Yes</span>
           </label>
           <label class="radio-option">
@@ -337,19 +363,21 @@
             <span>No</span>
           </label>
         </div>
+        <div class="error-msg">Please select an option.</div>
       </div>
 
       <!-- CV Upload -->
 
-      <div class="field">
+      <div class="field" id="field-cv">
         <label>Upload your CV <span class="req">*</span></label>
         <div class="file-wrap">
-          <input type="file" name="CV" id="cv-upload" accept=".pdf,.doc,.docx" required />
+          <input type="file" name="CV" id="cv-upload" accept=".pdf,.doc,.docx" />
           <div class="file-icon">📄</div>
           <div class="file-label"><strong>Click to upload</strong> or drag and drop</div>
           <div class="file-types">PDF, DOC, DOCX &nbsp;·&nbsp; Max 5 MB</div>
         </div>
         <div id="file-name"></div>
+        <div class="error-msg">Please upload your CV.</div>
       </div>
 
       <button type="submit" class="submit-btn">Submit Application</button>
@@ -367,6 +395,65 @@
       label.style.display = 'block';
     } else {
       label.style.display = 'none';
+    }
+    setError('field-cv', false);
+  });
+
+  function setError(fieldId, hasError) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.classList.toggle('field-error', hasError);
+  }
+
+  function clearOnInput(el, fieldId) {
+    el.addEventListener('input', () => setError(fieldId, false));
+    el.addEventListener('change', () => setError(fieldId, false));
+  }
+
+  clearOnInput(document.getElementById('name'), 'field-name');
+  clearOnInput(document.getElementById('student_id'), 'field-student_id');
+  clearOnInput(document.getElementById('email'), 'field-email');
+  clearOnInput(document.getElementById('phone'), 'field-phone');
+  clearOnInput(document.getElementById('telegram'), 'field-telegram');
+  clearOnInput(document.getElementById('course'), 'field-course');
+  clearOnInput(document.getElementById('experience'), 'field-experience');
+  clearOnInput(document.getElementById('why'), 'field-why');
+  clearOnInput(document.getElementById('value'), 'field-value');
+  document.querySelectorAll('input[name="Able to Commit to Thursday Night Trainings"]').forEach(r => {
+    r.addEventListener('change', () => setError('field-thursday', false));
+  });
+
+  document.querySelector('form').addEventListener('submit', function (e) {
+    let valid = true;
+
+    const checks = [
+      { id: 'name',       fieldId: 'field-name',       test: v => v.trim() !== '' },
+      { id: 'student_id', fieldId: 'field-student_id', test: v => v.trim() !== '' },
+      { id: 'email',      fieldId: 'field-email',      test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+      { id: 'phone',      fieldId: 'field-phone',      test: v => v.trim() !== '' },
+      { id: 'telegram',   fieldId: 'field-telegram',   test: v => v.trim() !== '' },
+      { id: 'course',     fieldId: 'field-course',     test: v => v.trim() !== '' },
+      { id: 'experience', fieldId: 'field-experience', test: v => v.trim() !== '' },
+      { id: 'why',        fieldId: 'field-why',        test: v => v.trim() !== '' },
+      { id: 'value',      fieldId: 'field-value',      test: v => v.trim() !== '' },
+    ];
+
+    checks.forEach(({ id, fieldId, test }) => {
+      const el = document.getElementById(id);
+      const err = !test(el.value);
+      setError(fieldId, err);
+      if (err) valid = false;
+    });
+
+    const thursdayPicked = document.querySelector('input[name="Able to Commit to Thursday Night Trainings"]:checked');
+    if (!thursdayPicked) { setError('field-thursday', true); valid = false; }
+
+    const cvInput = document.getElementById('cv-upload');
+    if (!cvInput.files.length) { setError('field-cv', true); valid = false; }
+
+    if (!valid) {
+      e.preventDefault();
+      document.querySelector('.field-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
 </script>
