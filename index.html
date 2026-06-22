@@ -179,7 +179,29 @@
       gap: 16px;
     }
 
-    @media (max-width: 520px) { .two-col { grid-template-columns: 1fr; } .card { padding: 24px 20px; } }
+    @media (max-width: 600px) {
+      header { padding: 28px 16px 20px; }
+      header h1 { font-size: 20px; }
+      header p { font-size: 13px; }
+
+      .container { margin: 20px auto; padding: 0 12px 40px; }
+
+      .notice { font-size: 13px; padding: 12px 14px; }
+
+      .card { padding: 24px 16px; }
+
+      .two-col { grid-template-columns: 1fr; }
+
+      .radio-group { flex-direction: column; gap: 10px; }
+
+      .radio-option { width: 100%; }
+
+      .file-wrap { padding: 20px 12px; }
+
+      .submit-btn { font-size: 14px; padding: 14px; }
+
+      .section-title { font-size: 12px; }
+    }
 
     .submit-btn {
       width: 100%;
