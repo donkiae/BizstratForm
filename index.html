@@ -671,7 +671,7 @@
     r.addEventListener('change', () => setError('field-thursday', false));
   });
 
-  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbz1dm-qPyRo2jfYDcpdMmXol0jmWJDMh5p3lB6ZtK48rlOhqjC0Tz84amwxAG1NTOvOWA/exec';
+  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbwXgfPUao0-Gcaay6GToOuapYo2LsJr-mNkgyX2T5XTqkRbupdAMNFdN0LnNmQNqKXavw/exec';
   const THANKYOU_URL = 'https://donkiae.github.io/BizstratForm/thankyou.html';
   const CHUNK_SIZE   = 3000;
   const BATCH_SIZE   = 10;
@@ -734,11 +734,14 @@
     setProgress(5, 'Reading CV...');
 
     try {
-      const cvFile  = cvInput.files[0];
-      const base64  = await readFileAsBase64(cvFile);
+      const cvFile = cvInput.files[0];
+      const base64 = await readFileAsBase64(cvFile);
 
-      // Build full JSON payload (text + CV)
-      const fullPayload = JSON.stringify({
+      const sid = Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+      // ── Phase 1: send text fields immediately (same approach as original) ──
+      setProgress(10, 'Saving your details...');
+      const textData = {
         'Full Name':                           document.getElementById('name').value.trim(),
         'Student ID':                          document.getElementById('student_id').value.trim(),
         'SIM Email':                           document.getElementById('email').value.trim(),
@@ -750,35 +753,31 @@
         'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
         'Value You Bring':                     document.getElementById('value').value.trim(),
         'Thursday Night Trainings':            thursdayPicked.value,
-        cvBase64: base64,
-        cvName:   cvFile.name,
-        cvType:   cvFile.type,
-      });
+      };
+      const p1 = new URLSearchParams({ payload: JSON.stringify(textData), sid });
+      await fetch(SCRIPT_URL + '?' + p1.toString(), { mode: 'no-cors' });
+      setProgress(25, 'Details saved. Uploading CV...');
 
-      const sid         = Date.now().toString(36) + Math.random().toString(36).slice(2);
-      const totalChunks = Math.ceil(fullPayload.length / CHUNK_SIZE);
+      // ── Phase 2: send CV as base64 chunks ──────────────────────────────────
+      const cvPayload   = JSON.stringify({ cvBase64: base64, cvName: cvFile.name, cvType: cvFile.type });
+      const totalChunks = Math.ceil(cvPayload.length / CHUNK_SIZE);
 
-      setProgress(10, 'Uploading... 0%');
-
-      const sendChunk = (i, isLast) => {
-        const chunk  = fullPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+      const sendCvChunk = (i, isLast) => {
+        const chunk  = cvPayload.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
         const params = new URLSearchParams({ sid, i, t: totalChunks, c: chunk, last: isLast ? '1' : '0' });
-        return fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+        return fetch(SCRIPT_URL + '?' + params.toString(), { mode: 'no-cors' });
       };
 
-      // Send all chunks EXCEPT the last in parallel batches
+      // Send all non-last chunks in parallel batches, then last chunk alone
       const nonLast = totalChunks - 1;
       for (let batch = 0; batch < Math.ceil(nonLast / BATCH_SIZE); batch++) {
         const start = batch * BATCH_SIZE;
         const end   = Math.min(start + BATCH_SIZE, nonLast);
-        await Promise.all(Array.from({ length: end - start }, (_, k) => sendChunk(start + k, false)));
-        const pct = Math.round(((end) / totalChunks) * 80) + 10;
-        setProgress(pct, 'Uploading... ' + Math.round((end / totalChunks) * 100) + '%');
+        await Promise.all(Array.from({ length: end - start }, (_, k) => sendCvChunk(start + k, false)));
+        setProgress(25 + Math.round((end / totalChunks) * 65), 'Uploading CV... ' + Math.round((end / totalChunks) * 100) + '%');
       }
-
-      // Send the last chunk alone AFTER all others have been received
-      setProgress(93, 'Saving to Drive...');
-      await sendChunk(totalChunks - 1, true);
+      setProgress(93, 'Saving CV to Drive...');
+      await sendCvChunk(totalChunks - 1, true);
 
       setProgress(100, 'Done!');
       await new Promise(r => setTimeout(r, 600));
@@ -786,7 +785,7 @@
 
     } catch (err) {
       document.getElementById('progress-overlay').classList.remove('active');
-      alert('Something went wrong. Please try again.');
+      alert('Something went wrong. Please try again.\n\n' + err.message);
     }
   });
 </script>
