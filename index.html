@@ -392,7 +392,11 @@
   </div>
 
   <div class="card">
-    <form id="appForm">
+    <form id="appForm" action="https://formsubmit.co/donkiae@gmail.com" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" value="New Application — SIM Business Strategy WY26/27" />
+      <input type="hidden" name="_captcha" value="false" />
+      <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="_next" value="https://donkiae.github.io/BizstratForm/thankyou.html" />
 
       <!-- Personal Info -->
       <div class="section-title">Personal Information</div>
@@ -623,11 +627,9 @@
     r.addEventListener('change', () => setError('field-thursday', false));
   });
 
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcKuKvmPHAz2HZmd30fnOJpO0F8zrWFHcehluI5w-jIrwjEWHEUW9ipMFYj1c0IKKAAA/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzT6RzfsYlE1Iwhy0kAtiM6JRd-WPTfuuyWNxkiMJTel4nvfYaDTfUAxFii_-0qNvjWdg/exec';
 
   document.getElementById('appForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
     const code = document.getElementById('country-code').value;
     const num  = document.getElementById('phone').value.trim();
 
@@ -660,52 +662,33 @@
     if (!cvInput.files.length) { setError('field-cv', true); valid = false; }
 
     if (!valid) {
+      e.preventDefault();
       document.querySelector('.field-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Show loading state
-    const btn = document.querySelector('.submit-btn');
-    btn.textContent = 'Submitting...';
-    btn.disabled = true;
-
-    // Read CV as base64 then send
-    const reader = new FileReader();
-    reader.onload = function () {
-      const base64 = reader.result.split(',')[1];
-      const payload = {
-        'Full Name':                           document.getElementById('name').value.trim(),
-        'Student ID':                          document.getElementById('student_id').value.trim(),
-        'SIM Email':                           document.getElementById('email').value.trim(),
-        'Contact Number':                      code + ' ' + num,
-        'Telegram Handle':                     document.getElementById('telegram').value.trim(),
-        'Programme':                           document.getElementById('programme').value,
-        'Year and Course':                     document.getElementById('course').value.trim(),
-        'CCA and Leadership Experience':       document.getElementById('experience').value.trim(),
-        'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
-        'Value You Bring':                     document.getElementById('value').value.trim(),
-        'Thursday Night Trainings':            thursdayPicked.value,
-        cvBase64: base64,
-        cvName:   cvInput.files[0].name,
-        cvType:   cvInput.files[0].type,
-      };
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      })
-      .then(() => {
-        window.location.href = 'https://donkiae.github.io/BizstratForm/thankyou.html';
-      })
-      .catch(() => {
-        btn.textContent = 'Submit Application';
-        btn.disabled = false;
-        alert('Something went wrong. Please try again.');
-      });
+    // Fire text data to Apps Script (sheet) — keepalive so it completes after page navigation
+    const payload = {
+      'Full Name':                           document.getElementById('name').value.trim(),
+      'Student ID':                          document.getElementById('student_id').value.trim(),
+      'SIM Email':                           document.getElementById('email').value.trim(),
+      'Contact Number':                      code + ' ' + num,
+      'Telegram Handle':                     document.getElementById('telegram').value.trim(),
+      'Programme':                           document.getElementById('programme').value,
+      'Year and Course':                     document.getElementById('course').value.trim(),
+      'CCA and Leadership Experience':       document.getElementById('experience').value.trim(),
+      'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
+      'Value You Bring':                     document.getElementById('value').value.trim(),
+      'Thursday Night Trainings':            thursdayPicked.value,
     };
-    reader.readAsDataURL(cvInput.files[0]);
+
+    fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload)), {
+      method: 'GET',
+      mode: 'no-cors',
+      keepalive: true
+    });
+
+    // Let form submit naturally to Formsubmit (handles CV email)
   });
 </script>
 
