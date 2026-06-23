@@ -406,7 +406,7 @@
         </div>
         <div class="field" id="field-student_id">
           <label for="student_id">Student ID <span class="req">*</span></label>
-          <input type="text" id="student_id" name="Student ID" placeholder="e.g. S1234567A" />
+          <input type="text" id="student_id" name="Student ID" placeholder="e.g. 1234567" />
           <div class="error-msg">Please enter your student ID.</div>
         </div>
       </div>
@@ -454,24 +454,19 @@
         <div class="error-msg">Please enter your year and course.</div>
       </div>
 
-      <!-- Experience -->
-      <div class="section-title">Experience &amp; Involvement</div>
-
-      <div class="field" id="field-experience">
-        <label for="experience">
-          Prior CCA / Leadership Experience <span class="req">*</span>
-          <span class="hint">List clubs, roles, or positions held</span>
-        </label>
-        <textarea id="experience" name="CCA and Leadership Experience" placeholder="e.g. Logistics Head, SIM Marketing Society (WY24/25)..."></textarea>
-        <div class="error-msg">Please fill in your CCA or leadership experience.</div>
-      </div>
-
       <!-- Motivation -->
 
       <div class="field" id="field-why">
         <label for="why">Why do you want to join SIM Business Strategy Club? <span class="req">*</span></label>
         <textarea id="why" name="Why Join SIM Business Strategy Club" placeholder="Share what draws you to this club specifically..."></textarea>
         <div class="error-msg">Please answer this question.</div>
+      </div>
+
+      <div class="field" id="field-gain">
+        <label for="gain">What do you hope to gain from BizStrat? <span class="req">*</span> <span class="hint">Max 150 words</span></label>
+        <textarea id="gain" name="What You Hope to Gain from BizStrat" placeholder="Share what you hope to learn, experience, or achieve..."></textarea>
+        <div id="gain-wordcount" style="font-size:12px;color:#888;margin-top:4px;">0 / 150 words</div>
+        <div class="error-msg">Please answer this question (max 150 words).</div>
       </div>
 
       <div class="field" id="field-value">
@@ -493,6 +488,25 @@
           </label>
         </div>
         <div class="error-msg">Please select an option.</div>
+      </div>
+
+      <div class="field" id="field-session">
+        <label>If shortlisted for assessment day, please select your preferred session. <span class="req">*</span></label>
+        <div class="radio-group" style="flex-wrap:wrap">
+          <label class="radio-option">
+            <input type="radio" name="Assessment Day Session" value="AM (10am–11:30am)" />
+            <span>AM &nbsp;·&nbsp; 10am – 11:30am</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="Assessment Day Session" value="PM (2pm–3:30pm)" />
+            <span>PM &nbsp;·&nbsp; 2pm – 3:30pm</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="Assessment Day Session" value="Available for both" />
+            <span>Available for both</span>
+          </label>
+        </div>
+        <div class="error-msg">Please select a preferred session.</div>
       </div>
 
       <!-- CV Upload -->
@@ -625,14 +639,24 @@
   clearOnInput(document.getElementById('telegram'), 'field-telegram');
   clearOnInput(document.getElementById('programme'), 'field-programme');
   clearOnInput(document.getElementById('course'), 'field-course');
-  clearOnInput(document.getElementById('experience'), 'field-experience');
   clearOnInput(document.getElementById('why'), 'field-why');
+  clearOnInput(document.getElementById('gain'), 'field-gain');
   clearOnInput(document.getElementById('value'), 'field-value');
   document.querySelectorAll('input[name="Able to Commit to Thursday Night Trainings"]').forEach(r => {
     r.addEventListener('change', () => setError('field-thursday', false));
   });
+  document.querySelectorAll('input[name="Assessment Day Session"]').forEach(r => {
+    r.addEventListener('change', () => setError('field-session', false));
+  });
 
-  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbzh1hUgsSJJaLkvq8JwYGbP_yQ_dd373dbFeRPzP-QLbn6lfLdUaN2gUehiKmTAKqd0gg/exec';
+  document.getElementById('gain').addEventListener('input', function () {
+    const words   = this.value.trim() === '' ? 0 : this.value.trim().split(/\s+/).length;
+    const counter = document.getElementById('gain-wordcount');
+    counter.textContent = words + ' / 150 words';
+    counter.style.color = words > 150 ? '#e63946' : '#888';
+  });
+
+  const SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbzsrkP59loIQE4MDIs2snz7Ucfpk1_JLXDHekq04n-ix7ezjb-D5vv_9xahXnbArNq1VA/exec';
   const THANKYOU_URL = 'https://donkiae.github.io/BizstratForm/thankyou.html';
 
   document.getElementById('appForm').addEventListener('submit', async function (e) {
@@ -650,9 +674,13 @@
       { id: 'telegram',   fieldId: 'field-telegram',   test: v => v.trim() !== '' },
       { id: 'programme',  fieldId: 'field-programme',  test: v => v !== '' },
       { id: 'course',     fieldId: 'field-course',     test: v => v.trim() !== '' },
-      { id: 'experience', fieldId: 'field-experience', test: v => v.trim() !== '' },
-      { id: 'why',        fieldId: 'field-why',        test: v => v.trim() !== '' },
-      { id: 'value',      fieldId: 'field-value',      test: v => v.trim() !== '' },
+      { id: 'why',   fieldId: 'field-why',   test: v => v.trim() !== '' },
+      { id: 'gain',  fieldId: 'field-gain',  test: v => {
+          const words = v.trim() === '' ? 0 : v.trim().split(/\s+/).length;
+          return v.trim() !== '' && words <= 150;
+        }
+      },
+      { id: 'value', fieldId: 'field-value', test: v => v.trim() !== '' },
     ];
 
     checks.forEach(({ id, fieldId, test }) => {
@@ -664,6 +692,9 @@
 
     const thursdayPicked = document.querySelector('input[name="Able to Commit to Thursday Night Trainings"]:checked');
     if (!thursdayPicked) { setError('field-thursday', true); valid = false; }
+
+    const sessionPicked = document.querySelector('input[name="Assessment Day Session"]:checked');
+    if (!sessionPicked) { setError('field-session', true); valid = false; }
 
     const cvInput = document.getElementById('cv-upload');
     const cvFile  = cvInput.files[0];
@@ -693,10 +724,11 @@
           'Telegram Handle':                     document.getElementById('telegram').value.trim(),
           'Programme':                           document.getElementById('programme').value,
           'Year and Course':                     document.getElementById('course').value.trim(),
-          'CCA and Leadership Experience':       document.getElementById('experience').value.trim(),
-          'Why Join SIM Business Strategy Club': document.getElementById('why').value.trim(),
+          'Why Join SIM Business Strategy Club':  document.getElementById('why').value.trim(),
+          'What You Hope to Gain from BizStrat': document.getElementById('gain').value.trim(),
           'Value You Bring':                     document.getElementById('value').value.trim(),
           'Thursday Night Trainings':            thursdayPicked.value,
+          'Assessment Day Session':              sessionPicked.value,
         },
         cvBase64: base64,
         cvName:   cvFile.name,
